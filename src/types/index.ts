@@ -617,6 +617,7 @@ export interface RefrigerantUnit {
   annualLeakRate: number;
   measuredTopUpKg: number | null;
   retiredThisYear: boolean;
+  retirementYear?: number | null; // when set, retirement losses occur only in this year (multi-year safe)
   recoveryEfficiency: number;
   serviceCostEURPerYear: number;
 }

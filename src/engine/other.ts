@@ -13,9 +13,11 @@ export function gwpOf(acc: Acc, gas: string): number | null {
  * Refrigerants: measured top-ups (mass balance) take precedence over default leak rates —
  * never both for the same unit and period. Retirement losses = charge × (1 − recovery).
  */
-export function refrigerantReleaseKg(u: { chargeKg: number; annualLeakRate: number; measuredTopUpKg: number | null; retiredThisYear: boolean; recoveryEfficiency: number }) {
-  const operating = u.measuredTopUpKg != null ? u.measuredTopUpKg : u.chargeKg * clamp01(u.annualLeakRate);
-  const eol = u.retiredThisYear ? u.chargeKg * (1 - clamp01(u.recoveryEfficiency)) : 0;
+export function refrigerantReleaseKg(u: { chargeKg: number; annualLeakRate: number; measuredTopUpKg: number | null; retiredThisYear: boolean; retirementYear?: number | null; recoveryEfficiency: number }, year?: number) {
+  const retired = u.retirementYear != null && year != null ? u.retirementYear === year : u.retiredThisYear;
+  const afterRetirement = u.retirementYear != null && year != null && year > u.retirementYear;
+  const operating = afterRetirement ? 0 : u.measuredTopUpKg != null ? u.measuredTopUpKg : u.chargeKg * clamp01(u.annualLeakRate);
+  const eol = retired ? u.chargeKg * (1 - clamp01(u.recoveryEfficiency)) : 0;
   return { operating, eol, total: operating + eol, method: u.measuredTopUpKg != null ? 'mass balance (measured top-ups)' : 'default leak rate × charge' };
 }
 
@@ -23,7 +25,7 @@ export function runRefrigerants(acc: Acc) {
   const p = acc.p;
   for (const u of p.refrigerants) {
     const gwp = gwpOf(acc, u.refrigerant);
-    const r = refrigerantReleaseKg(u);
+    const r = refrigerantReleaseKg(u, p.boundary.reportingYear);
     const status = u.measuredTopUpKg != null ? acc.status(`refrigerants.${u.id}.measuredTopUpKg`, 'measured') : acc.status(`refrigerants.${u.id}`, 'estimated');
     if (gwp == null) {
       acc.markMissing(`GWP for ${u.refrigerant}`);

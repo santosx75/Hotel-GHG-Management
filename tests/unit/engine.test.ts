@@ -484,3 +484,24 @@ describe('Additional accounting integrity checks', () => {
     }
   });
 });
+
+describe('Multi-year and decision-support integrity', () => {
+  it('refrigerant retirement losses occur once, in the retirement year only', () => {
+    const p = PRESET_MAP['refrigerant'].apply(city(), 2026);
+    const at = (y: number) => run({ ...p, boundary: { ...p.boundary, reportingYear: y } });
+    const old = (r: ReturnType<typeof run>) => r.lines.filter((l) => l.label.includes('(retired 2026)')).reduce((s, l) => s + l.kg, 0);
+    expect(old(at(2026))).toBeGreaterThan(0);
+    expect(old(at(2027))).toBe(0);
+    expect(old(at(2025))).toBe(0);
+  });
+
+  it('an intervention that saves money but raises emissions is never labelled as carbon action', async () => {
+    const { evaluatePresets } = await import('../../src/scenarios/decision');
+    const ev = evaluatePresets(city(), S, lib);
+    for (const e of ev) {
+      if (e.annualAbatementKg <= 0) expect(['Saves cost but increases emissions', 'Not beneficial on modelled data']).toContain(e.category);
+      if (e.annualSaving <= 0 && e.capex > 0) expect(e.simplePayback).toBeNull();
+      if (e.annualAbatementKg <= 0) expect(e.carbonBreakEven).toBeNull();
+    }
+  });
+});

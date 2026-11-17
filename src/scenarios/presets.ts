@@ -283,7 +283,7 @@ export const PRESETS: Preset[] = [
       const out: typeof p.refrigerants = [];
       for (const r of p.refrigerants) {
         if (!['R-404A', 'R-410A'].includes(r.refrigerant)) { out.push(r); continue; }
-        out.push({ ...r, id: `${r.id}-old`, name: `${r.name} (retired)`, annualLeakRate: 0, measuredTopUpKg: 0, retiredThisYear: true });
+        out.push({ ...r, id: `${r.id}-old`, name: `${r.name} (retired ${year})`, annualLeakRate: 0, measuredTopUpKg: 0, retiredThisYear: false, retirementYear: year });
         out.push({ ...r, id: `${r.id}-new`, name: `${r.name} (new, ${r.refrigerant === 'R-404A' ? 'R-744' : 'R-290'})`, refrigerant: r.refrigerant === 'R-404A' ? 'R-744' : 'R-290', chargeKg: r.refrigerant === 'R-404A' ? r.chargeKg : r.chargeKg * 0.4, measuredTopUpKg: null, annualLeakRate: 0.08 });
         p.capex.push(capex('refrigerant', `Replace ${r.name}`, r.chargeKg * 900, year, r.chargeKg * 25, 15, 'Refrigeration'));
       }

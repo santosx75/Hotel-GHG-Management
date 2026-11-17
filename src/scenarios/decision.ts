@@ -17,7 +17,7 @@ export interface PresetEvaluation {
   npvApprox: number;
   macApprox: number | null;
   carbonBreakEven: number | null;
-  category: 'Quick win' | 'Low-CAPEX action' | 'High-carbon-impact action' | 'Longer-term investment' | 'Not beneficial on modelled data';
+  category: 'Quick win' | 'Low-CAPEX action' | 'High-carbon-impact action' | 'Longer-term investment' | 'Saves cost but increases emissions' | 'Not beneficial on modelled data';
   warnings: string[];
 }
 
@@ -25,8 +25,12 @@ const annuity = (r: number, n: number) => (r === 0 ? n : (1 - (1 + r) ** -n) / r
 
 /** Evaluate each applicable preset in isolation against the baseline (constant-saving NPV approximation). */
 export function evaluatePresets(baseline: PropertyInputs, settings: GlobalSettings, lib: Library, calibration?: CalibrationRef): PresetEvaluation[] {
+  // Implement in the reporting year; evaluate steady state in the following year so that one-off events
+  // (acquisitions, refrigerant recovery at retirement) do not distort annual savings.
   const year = baseline.boundary.reportingYear;
-  const base = calculate(baseline, settings, lib, calibration);
+  const evalYear = year + 1;
+  const atYear = (p: PropertyInputs) => ({ ...p, boundary: { ...p.boundary, reportingYear: evalYear } });
+  const base = calculate(atYear(baseline), settings, lib, calibration);
   const baseOpex = escalatedOpex(base, baseline, 0);
   const baseKg = operationalKg(base);
   const f = baseline.finance;
@@ -34,7 +38,7 @@ export function evaluatePresets(baseline: PropertyInputs, settings: GlobalSettin
   for (const pr of PRESETS) {
     if (!pr.applicable(baseline)) continue;
     const s = pr.apply({ ...baseline, capex: [] }, year);
-    const r = calculate(s, settings, lib, calibration);
+    const r = calculate(atYear(s), settings, lib, calibration);
     const capex = sum(s.capex.map((c) => c.amountEUR));
     const embodied = sum(s.capex.map((c) => c.embodiedKg)) + sum(s.vehicles.map((v) => (v.replacement?.year === year ? v.replacement.embodiedKg * v.count : 0)));
     const saving = baseOpex - escalatedOpex(r, s, 0);
@@ -44,6 +48,7 @@ export function evaluatePresets(baseline: PropertyInputs, settings: GlobalSettin
     const payback = saving > 0 && capex > 0 ? capex / saving : saving > 0 ? 0 : null;
     let category: PresetEvaluation['category'];
     if (abatement <= 0 && saving <= 0) category = 'Not beneficial on modelled data';
+    else if (abatement <= 0) category = 'Saves cost but increases emissions';
     else if (capex <= 5000 && saving >= 0 && abatement > 0) category = 'Quick win';
     else if (capex <= 25000 && abatement > 0) category = 'Low-CAPEX action';
     else if (payback != null && payback <= 5) category = 'High-carbon-impact action';
@@ -80,8 +85,9 @@ export function greedyPackage(baseline: PropertyInputs, evals: PresetEvaluation[
   let p = { ...baseline, capex: [] as PropertyInputs['capex'] };
   const year = baseline.boundary.reportingYear;
   for (const c of chosen) p = PRESETS.find((x) => x.id === c.id)!.apply(p, year);
-  const base = calculate(baseline, settings, lib, calibration);
-  const integrated = calculate(p, settings, lib, calibration);
+  const atNext = (q: PropertyInputs) => ({ ...q, boundary: { ...q.boundary, reportingYear: year + 1 } });
+  const base = calculate(atNext(baseline), settings, lib, calibration);
+  const integrated = calculate(atNext(p), settings, lib, calibration);
   return {
     chosen,
     package: p,
