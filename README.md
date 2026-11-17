@@ -9,7 +9,7 @@ Greenhouse-gas accounting and operational scenario simulation for French hotels.
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 42 engine/accounting unit tests (Vitest)
+npm test             # 44 engine/accounting unit tests (Vitest)
 npm run build        # type-check + production build into dist/
 npm run preview      # serve dist/ on http://localhost:4173
 node tests/e2e/run-e2e.mjs   # browser checks against the preview server (Playwright + axe-core)
@@ -58,7 +58,7 @@ Every result is a list of `CalcLine`s carrying activity ID, factor ID/version, s
 
 ## What is verified
 
-- **Unit tests:** 42 passing, covering the 28 required mathematical/accounting tests plus checks on refrigerant mass balance, Weibull group replacement, biogenic CO2, GOs, Corsica revalidation, B&B allocation, calibration, finance edge cases, multi-year refrigerant retirement, decision categories and a randomised invariant test.
+- **Unit tests:** 44 passing, covering the 28 required mathematical/accounting tests plus checks on refrigerant mass balance, Weibull group replacement, biogenic CO2, GOs, Corsica revalidation, B&B allocation, calibration, finance edge cases, multi-year refrigerant retirement, decision categories, control effects, input consistency and a randomised invariant test.
 - **Browser checks:** 117 passing (`tests/e2e/run-e2e.mjs`):
   - 9 routes at 360/390/768/1024/1440 px, with no page-wide horizontal overflow and no console errors;
   - every property tab at 360 px;

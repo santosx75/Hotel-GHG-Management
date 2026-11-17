@@ -138,9 +138,9 @@ export function LaundryTab({ res, adv }: { res: PropertyResults; adv: boolean })
           <div className="fields">
             <NumField path="inHouseLaundry.machineCapacityKg" /><NumField path="inHouseLaundry.loadFactor" slider />
             <NumField path="inHouseLaundry.waterLPerCycle" label="Water per cycle" unit="L" /><NumField path="inHouseLaundry.electricityKWhPerCycle" label="Electricity per cycle" unit="kWh" step={0.1} />
-            <NumField path="inHouseLaundry.thermalKWhPerCycle" label="Wash heat per cycle" unit="kWh" step={0.5} />
+            <NumField path="inHouseLaundry.thermalKWhPerCycle" label="Wash heat per cycle at 60 °C" unit="kWh" step={0.5} />
             <SelectField path="inHouseLaundry.thermalCarrier" label="Wash heat source" options={[{ value: 'natural_gas', label: 'Gas (direct)' }, { value: 'electricity', label: 'Electric (in machine)' }, { value: 'dhw', label: 'From hot-water system' }]} />
-            <NumField path="inHouseLaundry.washTempC" label="Wash temperature" unit="°C" min={20} max={95} help="Informative; energy is set per cycle. Lower temperatures need validated hygiene chemistry." />
+            <NumField path="inHouseLaundry.washTempC" label="Wash temperature" unit="°C" min={20} max={95} help="Wash heat scales with (T − 12 °C)/(60 − 12 °C). Lower temperatures need validated hygiene chemistry." />
             <NumField path="inHouseLaundry.detergentGPerKg" label="Detergent dose" unit="g/kg" />
             <SelectField path="inHouseLaundry.dryerTech" label="Dryer" options={[{ value: 'gas', label: 'Gas' }, { value: 'electric', label: 'Electric' }, { value: 'heat_pump', label: 'Heat-pump dryer' }]} />
             <NumField path="inHouseLaundry.residualMoisture" label="Residual moisture after extraction" unit="kg water/kg" step={0.05} max={2} />

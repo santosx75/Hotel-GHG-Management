@@ -30,8 +30,6 @@ export function FoodTab({ res, adv }: { res: PropertyResults; adv: boolean }) {
         <div className="fields">
           <NumField path="food.vegetarianUptake" slider /><NumField path="food.overproductionShare" slider /><NumField path="food.plateWasteShare" /><NumField path="food.prepLossShare" />
           <NumField path="food.spoilageShare" /><NumField path="food.donationShareOfOverproduction" /><NumField path="food.banquetMealsPerAttendee" label="Banquet meals per attendee" unit="–" step={0.1} max={5} />
-          <Toggle path="food.buffetBreakfast" label="Buffet breakfast (informative; overproduction is set above)" />
-          <SelectField path="food.foodWasteRoute" label="Food-waste route (see Waste register)" options={[{ value: 'biowaste', label: 'Separate bio-waste' }, { value: 'residual', label: 'Residual stream' }]} />
           <Toggle path="food.factorsIncludeTransport" label="Food factors include transport to retail" help="If unticked, transport is added from t·km/kg below (no double counting)." />
           {!f.factorsIncludeTransport && <NumField path="food.transportTkmPerKg" label="Transport per kg" unit="t·km/kg" step={0.001} />}
         </div>

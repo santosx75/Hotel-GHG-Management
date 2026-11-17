@@ -143,14 +143,14 @@ export const PRESETS: Preset[] = [
     },
   },
   {
-    id: 'laundry-optimisation', label: 'In-house laundry optimisation', description: 'Fuller loads (95 %), low-temperature chemistry (−20 % wash heat, subject to hygiene validation), 20 % heat recovery.',
+    id: 'laundry-optimisation', label: 'In-house laundry optimisation', description: 'Fuller loads (95 %), 50 °C programme with validated low-temperature chemistry (subject to hygiene validation), 20 % heat recovery.',
     mechanisms: ['Loads', 'Wash heat', 'Water per kg'],
     applicable: (p) => p.textiles.some((t) => t.stream === 'in_house'),
     apply: (p0, year) => {
       const p = deepClone(p0);
       const L = p.inHouseLaundry;
       L.loadFactor = Math.max(L.loadFactor, 0.95);
-      L.thermalKWhPerCycle *= 0.8;
+      L.washTempC = Math.min(L.washTempC, 50);
       L.heatRecoveryShare = Math.max(L.heatRecoveryShare, 0.2);
       p.capex.push(capex('laundry-optimisation', 'Laundry heat recovery & dosing', p.inHouseLaundry.machineCapacityKg > 20 ? 15000 : 300, year, 200, 12, 'Laundry'));
       return p;

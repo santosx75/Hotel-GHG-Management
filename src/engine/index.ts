@@ -51,6 +51,10 @@ export function calculate(p: PropertyInputs, settings: GlobalSettings, library: 
   for (const [k, v] of Object.entries(p.activity)) {
     if (typeof v === 'number' && /Uptake|Rate|Share/.test(k) && (v < 0 || v > 1)) acc.warn('error', 'validation', `${k} = ${v} is outside the valid 0–1 range.`);
   }
+  for (const rt of p.activity.roomTypes) if (rt.guestsPerOccupiedRoom > rt.maxGuests) acc.warn('error', 'validation', `${rt.name}: ${rt.guestsPerOccupiedRoom} guests per occupied room exceeds the maximum occupancy of ${rt.maxGuests}.`);
+  if (p.activity.staffFTE > p.activity.staffHeadcount && p.activity.staffHeadcount > 0) acc.warn('warn', 'validation', `Staff FTE (${p.activity.staffFTE}) exceeds headcount (${p.activity.staffHeadcount}).`);
+  const areaSum = act.guestroomAreaM2 + p.activity.publicAreaM2 + p.activity.backOfHouseM2 + p.activity.meetingAreaM2;
+  if (areaSum > 1.1 * p.building.conditionedAreaM2) acc.warn('warn', 'validation', `Guestroom + public + back-of-house + meeting areas (${Math.round(areaSum)} m²) exceed the conditioned floor area (${Math.round(p.building.conditionedAreaM2)} m²) by more than 10 %.`);
   p.activity.monthlyOccupancy.forEach((o, m) => { if (o < 0 || o > 1) acc.warn('error', 'validation', `Monthly occupancy for month ${m + 1} (${o}) is outside 0–100 %.`); });
 
   const totals = computeTotals(p, act, acc.lines, acc.costs, supply.energy, water.mainsM3, acc.wasteKg);

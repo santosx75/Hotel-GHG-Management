@@ -135,12 +135,11 @@ export function BoundaryTab({ res }: { res: PropertyResults }) {
       <Card title="Organisational boundary">
         <div className="fields">
           <TextField path="boundary.reportingEntity" label="Reporting entity" />
-          <SelectField path="boundary.ownership" label="Asset status" options={[{ value: 'owned', label: 'Owned' }, { value: 'leased', label: 'Leased' }, { value: 'managed', label: 'Managed' }, { value: 'franchised', label: 'Franchised' }]} />
-          <SelectField path="boundary.consolidation" label="Consolidation approach" options={[{ value: 'operational_control', label: 'Operational control' }, { value: 'financial_control', label: 'Financial control' }, { value: 'equity_share', label: 'Equity share' }]} help="All three are recorded; the calculations assume the property is 100 % inside the selected boundary." />
+          <SelectField path="boundary.ownership" label="Asset status (recorded in reports)" options={[{ value: 'owned', label: 'Owned' }, { value: 'leased', label: 'Leased' }, { value: 'managed', label: 'Managed' }, { value: 'franchised', label: 'Franchised' }]} />
+          <SelectField path="boundary.consolidation" label="Consolidation approach" options={[{ value: 'operational_control', label: 'Operational control' }, { value: 'financial_control', label: 'Financial control' }, { value: 'equity_share', label: 'Equity share' }]} help="Recorded in reports and exports. Calculations assume 100 % of this property is inside the selected boundary (equity share: scale results externally)." />
           <NumField path="boundary.baseYear" label="Base year" unit="year" min={1990} max={2100} />
           <TextField path="boundary.includedBuildings" label="Included buildings" />
           <Toggle path="boundary.restaurantsIncluded" label="Restaurants & bars inside boundary" />
-          <Toggle path="boundary.concessionsIncluded" label="Third-party concessions included" />
           <TextField path="boundary.concessionNote" label="Shops / concessions" multiline />
           <TextField path="boundary.sharedServicesNote" label="Shared services" multiline />
           <TextField path="boundary.outsourcedActivitiesNote" label="Outsourced activities" multiline />

@@ -154,7 +154,9 @@ export function runLaundry(acc: Acc, act: ActivityMetrics) {
     const loads = inKg.map((k) => k / Math.max(1, L.machineCapacityKg * clamp01(L.loadFactor || 1)));
     result.loads = sum(loads);
     acc.addEnergy({ carrier: 'electricity', endUse: 'Laundry washers (motors & controls)', department: 'Housekeeping & Laundry', monthly: map12((m) => loads[m] * L.electricityKWhPerCycle + L.standbyKWhPerDay * act.openDays[m]), status: st, module: 'laundry' });
-    const heat = loads.map((l) => l * L.thermalKWhPerCycle * (1 - clamp01(L.heatRecoveryShare)));
+    // wash heat per cycle is specified at a 60 °C programme and scales with the temperature rise above a 12 °C inlet
+    const tempScale = Math.max(0, L.washTempC - 12) / (60 - 12);
+    const heat = loads.map((l) => l * L.thermalKWhPerCycle * tempScale * (1 - clamp01(L.heatRecoveryShare)));
     if (L.thermalCarrier === 'dhw') acc.dhwDemands.push({ endUse: 'Laundry wash water heating', department: 'Housekeeping & Laundry', monthly: heat });
     else acc.addEnergy({ carrier: L.thermalCarrier, endUse: 'Laundry wash water heating', department: 'Housekeeping & Laundry', monthly: heat, status: st, module: 'laundry' });
     const dryer = dryKg.map((k) => k * L.residualMoisture * L.dryerKWhPerKgWater);
@@ -164,6 +166,7 @@ export function runLaundry(acc: Acc, act: ActivityMetrics) {
     acc.emit({ id: 'laundry-detergent', activityId: 'laundry-detergent', label: 'Laundry detergent & chemicals', module: 'laundry', department: 'Housekeeping & Laundry', scope: 'S3', s3cat: 1, views: ['corporate', 'lca', 'visitor'], activityUnit: 'kg', factorId: L.detergentFactorId, monthlyActivity: inKg.map((k) => (k * L.detergentGPerKg) / 1000), status: acc.status('inHouseLaundry.detergentGPerKg', 'assumed'), formula: 'kg washed × g detergent/kg ÷ 1000 × factor', inputs: { gPerKg: L.detergentGPerKg } });
     acc.cost({ id: 'laundry-maintenance', label: 'In-house laundry maintenance', category: 'maintenance', department: 'Housekeeping & Laundry', fixed: L.maintenanceEURPerYear, variable: 0, vatRate: 0.2, monthly: new Array(12).fill(L.maintenanceEURPerYear / 12), status: acc.status('inHouseLaundry.maintenanceEURPerYear', 'assumed') });
     acc.cost({ id: 'laundry-detergent-cost', label: 'Laundry detergent', category: 'products', department: 'Housekeeping & Laundry', fixed: 0, variable: (sum(inKg) * L.detergentGPerKg) / 1000 * 3.5, vatRate: 0.2, monthly: inKg.map((k) => (k * L.detergentGPerKg) / 1000 * 3.5), status: 'assumed', notes: 'Detergent at a demonstration 3.5 €/kg.' });
+    if (L.washTempC < 60) acc.warn('info', 'laundry hygiene', `Laundry wash temperature ${L.washTempC} °C: lower-temperature programmes require validated disinfection chemistry/process (hygiene responsibility of the operator).`);
     if (p.cleaning.includeLabourInCosts) {
       const hours = (sum(inKg) * L.labourMinutesPerKg) / 60;
       acc.cost({ id: 'laundry-labour', label: 'In-house laundry labour', category: 'labour', department: 'Housekeeping & Laundry', fixed: 0, variable: hours * p.cleaning.labourCostEURPerHour, vatRate: 0, monthly: inKg.map((k) => ((k * L.labourMinutesPerKg) / 60) * p.cleaning.labourCostEURPerHour), status: 'assumed' });

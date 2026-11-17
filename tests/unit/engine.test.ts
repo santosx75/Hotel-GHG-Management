@@ -505,3 +505,26 @@ describe('Multi-year and decision-support integrity', () => {
     }
   });
 });
+
+describe('Controls have real effects', () => {
+  it('laundry wash temperature changes wash heat', () => {
+    const a = run(city());
+    const p = city();
+    p.inHouseLaundry.washTempC = 40;
+    const b = run(p);
+    expect(endUse(b, 'natural_gas', 'Laundry wash water heating')).toBeLessThan(endUse(a, 'natural_gas', 'Laundry wash water heating'));
+    close(endUse(b, 'natural_gas', 'Laundry wash water heating') / endUse(a, 'natural_gas', 'Laundry wash water heating'), 28 / 48, 1e-9);
+  });
+});
+
+describe('Input consistency checks', () => {
+  it('flags guests above maximum occupancy and inconsistent areas', () => {
+    const p = city();
+    p.activity.roomTypes[0].guestsPerOccupiedRoom = 3;
+    p.activity.publicAreaM2 = 20000;
+    const r = run(p);
+    expect(r.warnings.some((w) => w.message.includes('exceeds the maximum occupancy'))).toBe(true);
+    expect(r.warnings.some((w) => w.message.includes('exceed the conditioned floor area'))).toBe(true);
+    for (const id of PROPERTY_IDS) expect(run(SEEDS[id]()).warnings.filter((w) => w.module === 'validation')).toEqual([]);
+  });
+});
