@@ -1,0 +1,16 @@
+# Render Blueprint — deploys Hotel Carbon Lab as a static site (no server needed).
+services:
+  - type: web
+    name: hotel-carbon-lab
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+    # Client-side routes (/city-hotel, /compare, …) must fall back to index.html.
+    # Render serves real files (e.g. /assets/*.js) before applying this rule.
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
